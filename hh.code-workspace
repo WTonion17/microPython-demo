@@ -1,0 +1,16 @@
+{
+	"folders": [
+		{
+			"name": "hh",
+			"path": "."
+		},
+		{
+			"name": "serial:/COM6",
+			"uri": "serial://com6"
+		},
+		{
+			"name": "serial:/COM6",
+			"uri": "serial://com6"
+		}
+	]
+}

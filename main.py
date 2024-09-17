@@ -1,97 +1,91 @@
-from machine import Pin, ADC, SoftI2C
-import sh1106
-import network
-import time
-import math
-import onewire
-import ds18x20
+# from machine import Pin, ADC, SoftI2C
+# import sh1106
+# import network
+# import time
+# import math
+# import onewire
+# import ds18x20
 
-i2c = SoftI2C(scl=Pin(22), sda=Pin(21), freq=400000)
-display = sh1106.SH1106_I2C(128, 64, i2c, Pin(16), 0x3c)
+# i2c = SoftI2C(scl=Pin(22), sda=Pin(21), freq=400000)
+# display = sh1106.SH1106_I2C(128, 64, i2c, Pin(16), 0x3c)
 
-ssid = 'NHATRO BM T1'
-password = 'nhatro123456t1'
-def connect_wifi(ssid, password):
-    wlan = network.WLAN(network.STA_IF)
-    wlan.active(True)
-    wlan.connect(ssid, password)
+# ssid = 'NHATRO BM T1'
+# password = 'nhatro123456t1'
+# def connect_wifi(ssid, password):
+#     wlan = network.WLAN(network.STA_IF)
+#     wlan.active(True)
+#     wlan.connect(ssid, password)
 
-    while not wlan.isconnected():
-        print('Connecting to network...')
-        time.sleep(1)
+#     while not wlan.isconnected():
+#         print('Connecting to network...')
+#         time.sleep(1)
 
-    print('connected wifi: ', ssid)
-    print('Network config:', wlan.ifconfig())
+#     print('connected wifi: ', ssid)
+#     print('Network config:', wlan.ifconfig())
 
-connect_wifi(ssid, password)
+# connect_wifi(ssid, password)
 
-# Turbidity sensor
-adc = ADC(Pin(34))
-adc.atten(ADC.ATTN_11DB)
-def read_turbidity():
-    volt = 0
-    for _ in range(800):
-        volt += adc.read() / 4095 * 3.3 * 2.41
-    volt /= 800
-    volt = round(volt, 1)
-    if volt < 2.5:
-        NTU = 3000
-    else:
-        NTU = -1120.4 * math.sqrt(volt) + 5742.3 * volt - 4352.9
-    print('vol: {:.2f}'.format(volt),'Tur: {:.2f}'.format(NTU))
-    display.text("Tur: {:.2f}".format(NTU), 5, 0) 
+# # Turbidity sensor
+# adc = ADC(Pin(34))
+# adc.atten(ADC.ATTN_11DB)
+# def read_turbidity():
+#     value = adc.read()
+#     Voltage = value * 3.87 / 1024.0
+#     NTU =-1120.4 * Voltage*Voltage + 5742.3*Voltage - 4352.9
+#     print('vol: {:.2f}'.format(Voltage),'Tur: {:.2f}'.format(NTU))
+#     display.text("Tur: {:.2f}".format(NTU), 5, 0) 
     
 
-# pH sensor
-def read_ph():
-    adc = ADC(Pin(35))
-    buf = [adc.read() for _ in range(10)]
-    buf.sort()
-    avgValue = sum(buf[2:8]) / 6
-    phVol = avgValue * 3.3 / 4095 / 4.3
-    phValue = 14.2 - (-5.70 * phVol + 29.5)
-    print('PH: {:.2f}'.format(phValue))
-    display.text("PH: {:.2f}".format(phValue), 5, 45)   
+# # pH sensor
+# def read_ph():
+#     adc = ADC(Pin(35))
+#     buf = [adc.read() for _ in range(10)]
+#     buf.sort()
+#     avgValue = sum(buf[2:8]) / 6
+#     phVol = avgValue * 3.3 / 4095 / 4.3
+#     phValue = 14.2 - (-5.70 * phVol + 29.5)
+#     print('PH: {:.2f}'.format(phValue))
+#     display.text("PH: {:.2f}".format(phValue), 5, 45)   
                                                                                          
 
-# Temperature sensor
-# DS18B20 Temperature sensor setup
-dat = Pin(4)
-ds_sensor = ds18x20.DS18X20(onewire.OneWire(dat))
-roms = ds_sensor.scan()
-print('Found DS devices: ', roms)
+# # Temperature sensor
+# # DS18B20 Temperature sensor setup
+# dat = Pin(4)
+# ds_sensor = ds18x20.DS18X20(onewire.OneWire(dat))
+# roms = ds_sensor.scan()
+# print('Found DS devices: ', roms)
 
-if not roms:
-    print("No DS18B20 devices found!")
-def read_temperature():
-    ds_sensor.convert_temp()
-    time.sleep_ms(750)
-    for rom in roms:
-        temp = ds_sensor.read_temp(rom)
-        print('Temperature: {:.2f} C'.format(temp))
+# if not roms:
+#     print("No DS18B20 devices found!")
+# def read_temperature():
+#     ds_sensor.convert_temp()
+#     time.sleep_ms(750)
+#     for rom in roms:
+#         temp = ds_sensor.read_temp(rom)
+#         print('Temperature: {:.2f} C'.format(temp))
             
-            # Hiển thị nhiệt độ lên OLED
-        # display.fill(0)
-        display.text("Temp: {:.2f} C".format(temp), 5, 30)
-        # display.show()
+#             # Hiển thị nhiệt độ lên OLED
+#         # display.fill(0)
+#         display.text("Temp: {:.2f} C".format(temp), 5, 30)
+#         # display.show()
     
 
-# # Main loop
-#     connect_wifi()
-while True:
-        # read_turbidity()
-        # read_ph()
-        # read_temperature()
+# # # Main loop
+# #     connect_wifi()
+# while True:
+#         # read_turbidity()
+#         # read_ph()
+#         # read_temperature()
         
-        # Update OLED display 
-        # display.sleep(False)
-        display.fill(0)
-        read_turbidity()
-        read_ph() 
-        # read_temperature()
-        display.show()
+#         # Update OLED display 
+#         # display.sleep(False)
+#         display.fill(0)
+#         read_turbidity()
+#         read_ph() 
+#         # read_temperature()
+#         display.show()
         
-        time.sleep(2)
+#         time.sleep(2)
 
 # from machine import Pin, ADC, I2C
 # import network
@@ -183,3 +177,60 @@ while True:
 
 # if _name_ == "_main_":
 #     main()
+
+import network
+import socket
+from machine import Pin, SoftI2C
+import sh1106
+
+# Kết nối WiFi
+ssid = 'NHATRO BM T1'
+password = 'nhatro123456t1'
+wifi = network.WLAN(network.STA_IF)
+wifi.active(True)
+wifi.connect(ssid, password)
+
+while not wifi.isconnected():
+    pass
+
+print('Connected to WiFi')
+
+# Khởi tạo màn hình OLED
+i2c = SoftI2C(scl=Pin(22), sda=Pin(21), freq=400000)
+display = sh1106.SH1106_I2C(128, 64, i2c, Pin(16), 0x3c)
+
+# Khởi tạo động cơ
+# motor_pin = Pin(15, Pin.OUT)
+
+# Thiết lập server để nhận dữ liệu
+addr = socket.getaddrinfo('0.0.0.0', 80)[0][-1]
+s = socket.socket()
+s.bind(addr)
+s.listen(1)
+
+print('Listening on', addr)
+
+while True:
+    cl, addr = s.accept()
+    print('Client connected from', addr)
+    request = cl.recv(1024)
+    request = str(request)
+    
+    temp_start = request.find('/update?temp=') + len('/update?temp=')
+    temp_end = request.find(' HTTP/')
+    temp = float(request[temp_start:temp_end])
+    
+    # Hiển thị giá trị lên màn hình OLED
+    display.fill(0)
+    display.text('Temp: {:.1f} C'.format(temp), 0, 0)
+    display.show()
+    
+    # Điều khiển động cơ dựa trên nhiệt độ
+    # if temp > 30:  # Ngưỡng nhiệt độ để bật động cơ
+    #     motor_pin.on()
+    # else:
+    #     motor_pin.off()
+    
+    response = 'HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\nOK'
+    cl.send(response)
+    cl.close()
