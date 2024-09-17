@@ -1,55 +1,63 @@
-# from machine import Pin, ADC, SoftI2C
-# import sh1106
-# import network
-# import time
-# import math
-# import onewire
-# import ds18x20
+from machine import Pin, ADC, SoftI2C
+import sh1106
+import network
+import time
+import math
+import onewire
+import ds18x20
+import blynklib
 
-# i2c = SoftI2C(scl=Pin(22), sda=Pin(21), freq=400000)
-# display = sh1106.SH1106_I2C(128, 64, i2c, Pin(16), 0x3c)
+i2c = SoftI2C(scl=Pin(22), sda=Pin(21), freq=400000)
+display = sh1106.SH1106_I2C(128, 64, i2c, Pin(16), 0x3c)
 
-# ssid = 'NHATRO BM T1'
-# password = 'nhatro123456t1'
-# def connect_wifi(ssid, password):
-#     wlan = network.WLAN(network.STA_IF)
-#     wlan.active(True)
-#     wlan.connect(ssid, password)
+ssid = 'NHATRO BM T1'
+password = 'nhatro123456t1'
+def connect_wifi(ssid, password):
+    wlan = network.WLAN(network.STA_IF)
+    wlan.active(True)
+    wlan.connect(ssid, password)
 
-#     while not wlan.isconnected():
-#         print('Connecting to network...')
-#         time.sleep(1)
+    while not wlan.isconnected():
+        print('Connecting to network...')
+        time.sleep(1)
 
-#     print('connected wifi: ', ssid)
-#     print('Network config:', wlan.ifconfig())
+    print('connected wifi: ', ssid)
+    print('Network config:', wlan.ifconfig())
 
-# connect_wifi(ssid, password)
+connect_wifi(ssid, password)
 
-# # Turbidity sensor
-# adc = ADC(Pin(34))
-# adc.atten(ADC.ATTN_11DB)
-# def read_turbidity():
-#     value = adc.read()
-#     Voltage = value * 3.87 / 1024.0
-#     NTU =-1120.4 * Voltage*Voltage + 5742.3*Voltage - 4352.9
-#     print('vol: {:.2f}'.format(Voltage),'Tur: {:.2f}'.format(NTU))
-#     display.text("Tur: {:.2f}".format(NTU), 5, 0) 
+BLYNK_AUTH_TOKEN = '4Sly-C35Dvbbi8FWkc9mmCpMfGfK0NJl'
+blynk = blynklib.Blynk(BLYNK_AUTH_TOKEN)
+if blynk is None:
+    print('Failed to initialize Blynk')
+else:
+    print('Blynk initialized successfully')
+
+# Turbidity sensor
+adc = ADC(Pin(34))
+adc.atten(ADC.ATTN_11DB)
+def read_turbidity():
+    value = adc.read()
+    Voltage = value * 3.87 / 1024.0
+    NTU =-1120.4 * Voltage*Voltage + 5742.3*Voltage - 4352.9
+    print('vol: {:.2f}'.format(Voltage),'Tur: {:.2f}'.format(NTU))
+    return NTU
+    
     
 
-# # pH sensor
-# def read_ph():
-#     adc = ADC(Pin(35))
-#     buf = [adc.read() for _ in range(10)]
-#     buf.sort()
-#     avgValue = sum(buf[2:8]) / 6
-#     phVol = avgValue * 3.3 / 4095 / 4.3
-#     phValue = 14.2 - (-5.70 * phVol + 29.5)
-#     print('PH: {:.2f}'.format(phValue))
-#     display.text("PH: {:.2f}".format(phValue), 5, 45)   
-                                                                                         
+# pH sensor
+def read_ph():
+    adc = ADC(Pin(35))
+    buf = [adc.read() for _ in range(10)]
+    buf.sort()
+    avgValue = sum(buf[2:8]) / 6
+    phVol = avgValue * 3.3 / 4095 / 4.3
+    phValue = 14.2 - (-5.70 * phVol + 29.5)
+    print('PH: {:.2f}'.format(phValue))
+    return phValue                                                                                 
 
-# # Temperature sensor
-# # DS18B20 Temperature sensor setup
+# Temperature sensor
+# DS18B20 Temperature sensor setup
 # dat = Pin(4)
 # ds_sensor = ds18x20.DS18X20(onewire.OneWire(dat))
 # roms = ds_sensor.scan()
@@ -67,25 +75,34 @@
 #             # Hiển thị nhiệt độ lên OLED
 #         # display.fill(0)
 #         display.text("Temp: {:.2f} C".format(temp), 5, 30)
-#         # display.show()
+#         blynk.virtual_write(0,temp)
+        # display.show()
     
 
-# # # Main loop
-# #     connect_wifi()
-# while True:
-#         # read_turbidity()
-#         # read_ph()
-#         # read_temperature()
+# # Main loop
+#     connect_wifi()
+while True:   
+             
+        # read_turbidity()
+        # read_ph()
+        # read_temperature()
         
-#         # Update OLED display 
-#         # display.sleep(False)
-#         display.fill(0)
-#         read_turbidity()
-#         read_ph() 
-#         # read_temperature()
-#         display.show()
+        # Update OLED display 
+        # display.sleep(False)
         
-#         time.sleep(2)
+        NTU = read_turbidity()
+        # phValue = read_ph() 
+        
+        # read_temperature()
+        display.fill(0)
+        display.text("Tur: {:.2f}".format(NTU), 5, 0) 
+        # display.text("PH: {:.2f}".format(phValue), 5, 45) 
+        display.show()
+        if blynk is not None:
+            blynk.virtual_write(1,NTU)
+            # blynk.virtual_write(2,phValue)
+            blynk.run()
+        time.sleep(10)
 
 # from machine import Pin, ADC, I2C
 # import network
@@ -178,59 +195,59 @@
 # if _name_ == "_main_":
 #     main()
 
-import network
-import socket
-from machine import Pin, SoftI2C
-import sh1106
+# import network
+# import socket
+# from machine import Pin, SoftI2C
+# import sh1106
 
-# Kết nối WiFi
-ssid = 'NHATRO BM T1'
-password = 'nhatro123456t1'
-wifi = network.WLAN(network.STA_IF)
-wifi.active(True)
-wifi.connect(ssid, password)
+# # Kết nối WiFi
+# ssid = 'NHATRO BM T1'
+# password = 'nhatro123456t1'
+# wifi = network.WLAN(network.STA_IF)
+# wifi.active(True)
+# wifi.connect(ssid, password)
 
-while not wifi.isconnected():
-    pass
+# while not wifi.isconnected():
+#     pass
 
-print('Connected to WiFi')
+# print('Connected to WiFi')
 
-# Khởi tạo màn hình OLED
-i2c = SoftI2C(scl=Pin(22), sda=Pin(21), freq=400000)
-display = sh1106.SH1106_I2C(128, 64, i2c, Pin(16), 0x3c)
+# # Khởi tạo màn hình OLED
+# i2c = SoftI2C(scl=Pin(22), sda=Pin(21), freq=400000)
+# display = sh1106.SH1106_I2C(128, 64, i2c, Pin(16), 0x3c)
 
-# Khởi tạo động cơ
-# motor_pin = Pin(15, Pin.OUT)
+# # Khởi tạo động cơ
+# # motor_pin = Pin(15, Pin.OUT)
 
-# Thiết lập server để nhận dữ liệu
-addr = socket.getaddrinfo('0.0.0.0', 80)[0][-1]
-s = socket.socket()
-s.bind(addr)
-s.listen(1)
+# # Thiết lập server để nhận dữ liệu
+# addr = socket.getaddrinfo('0.0.0.0', 80)[0][-1]
+# s = socket.socket()
+# s.bind(addr)
+# s.listen(1)
 
-print('Listening on', addr)
+# print('Listening on', addr)
 
-while True:
-    cl, addr = s.accept()
-    print('Client connected from', addr)
-    request = cl.recv(1024)
-    request = str(request)
+# while True:
+#     cl, addr = s.accept()
+#     print('Client connected from', addr)
+#     request = cl.recv(1024)
+#     request = str(request)
     
-    temp_start = request.find('/update?temp=') + len('/update?temp=')
-    temp_end = request.find(' HTTP/')
-    temp = float(request[temp_start:temp_end])
+#     temp_start = request.find('/update?temp=') + len('/update?temp=')
+#     temp_end = request.find(' HTTP/')
+#     temp = float(request[temp_start:temp_end])
     
-    # Hiển thị giá trị lên màn hình OLED
-    display.fill(0)
-    display.text('Temp: {:.1f} C'.format(temp), 0, 0)
-    display.show()
+#     # Hiển thị giá trị lên màn hình OLED
+#     display.fill(0)
+#     display.text('Temp: {:.1f} C'.format(temp), 0, 0)
+#     display.show()
     
-    # Điều khiển động cơ dựa trên nhiệt độ
-    # if temp > 30:  # Ngưỡng nhiệt độ để bật động cơ
-    #     motor_pin.on()
-    # else:
-    #     motor_pin.off()
+#     # Điều khiển động cơ dựa trên nhiệt độ
+#     # if temp > 30:  # Ngưỡng nhiệt độ để bật động cơ
+#     #     motor_pin.on()
+#     # else:
+#     #     motor_pin.off()
     
-    response = 'HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\nOK'
-    cl.send(response)
-    cl.close()
+#     response = 'HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\nOK'
+#     cl.send(response)
+#     cl.close()
