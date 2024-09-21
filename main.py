@@ -6,27 +6,26 @@ import math
 import onewire
 import ds18x20
 import blynklib
+import socket
 
 i2c = SoftI2C(scl=Pin(22), sda=Pin(21), freq=400000)
 display = sh1106.SH1106_I2C(128, 64, i2c, Pin(16), 0x3c)
 
 ssid = 'NHATRO BM T1'
 password = 'nhatro123456t1'
-def connect_wifi(ssid, password):
-    wlan = network.WLAN(network.STA_IF)
-    wlan.active(True)
-    wlan.connect(ssid, password)
 
-    while not wlan.isconnected():
-        print('Connecting to network...')
-        time.sleep(1)
+station = network.WLAN(network.STA_IF)
+station.active(True)
+station.connect(ssid, password)
 
-    print('connected wifi: ', ssid)
-    print('Network config:', wlan.ifconfig())
+while not station.isconnected():
+    print('Connecting to WiFi...')
+    time.sleep(1)
 
-connect_wifi(ssid, password)
+print('WiFi connected')
+print(station.ifconfig())
 
-BLYNK_AUTH_TOKEN = '4Sly-C35Dvbbi8FWkc9mmCpMfGfK0NJl'
+BLYNK_AUTH_TOKEN = 'ntlI3mfVTq7OGbENwVtmV6VG89xuipbK'
 blynk = blynklib.Blynk(BLYNK_AUTH_TOKEN)
 if blynk is None:
     print('Failed to initialize Blynk')
@@ -58,51 +57,41 @@ def read_ph():
 
 # Temperature sensor
 # DS18B20 Temperature sensor setup
-# dat = Pin(4)
-# ds_sensor = ds18x20.DS18X20(onewire.OneWire(dat))
-# roms = ds_sensor.scan()
-# print('Found DS devices: ', roms)
+dat = Pin(4)
+ds_sensor = ds18x20.DS18X20(onewire.OneWire(dat))
+roms = ds_sensor.scan()
+print('Found DS devices: ', roms)
 
-# if not roms:
-#     print("No DS18B20 devices found!")
-# def read_temperature():
-#     ds_sensor.convert_temp()
-#     time.sleep_ms(750)
-#     for rom in roms:
-#         temp = ds_sensor.read_temp(rom)
-#         print('Temperature: {:.2f} C'.format(temp))
+if not roms:
+    print("No DS18B20 devices found!")
+def read_temperature():
+    ds_sensor.convert_temp()
+    time.sleep_ms(750)
+    for rom in roms:
+        temp = ds_sensor.read_temp(rom)
+        print('Temperature: {:.2f} C'.format(temp))
             
-#             # Hiển thị nhiệt độ lên OLED
-#         # display.fill(0)
-#         display.text("Temp: {:.2f} C".format(temp), 5, 30)
-#         blynk.virtual_write(0,temp)
-        # display.show()
+            # Hiển thị nhiệt độ lên OLED
+        # display.fill(0)
+        display.text("Temp: {:.2f} C".format(temp), 5, 30)
+        blynk.virtual_write(0,temp)
+        display.show()
     
 
-# # Main loop
-#     connect_wifi()
-while True:   
-             
-        # read_turbidity()
-        # read_ph()
-        # read_temperature()
-        
-        # Update OLED display 
-        # display.sleep(False)
-        
+while True:               
         NTU = read_turbidity()
-        # phValue = read_ph() 
+        phValue = read_ph() 
         
-        # read_temperature()
+        read_temperature()
         display.fill(0)
         display.text("Tur: {:.2f}".format(NTU), 5, 0) 
         # display.text("PH: {:.2f}".format(phValue), 5, 45) 
         display.show()
         if blynk is not None:
-            blynk.virtual_write(1,NTU)
+            blynk.virtual_write(0,NTU)
             # blynk.virtual_write(2,phValue)
             blynk.run()
-        time.sleep(10)
+        time.sleep(5)
 
 # from machine import Pin, ADC, I2C
 # import network
