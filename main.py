@@ -6,23 +6,28 @@ import math
 import onewire
 import ds18x20
 import blynklib_mp
+import urequests
+import ntptime
 
 i2c = SoftI2C(scl=Pin(22), sda=Pin(21), freq=400000)
 display = sh1106.SH1106_I2C(128, 64, i2c, Pin(16), 0x3c)
 
-ssid = 'Giangvien'
-password = 'dhbk@2024'
+ssid = 'NHATRO BM T1'
+password = 'nhatro123456t1'
 
 station = network.WLAN(network.STA_IF)
 station.active(True)
 station.connect(ssid, password)
-
 while not station.isconnected():
     print('Connecting to WiFi...')
     time.sleep(1)
 
 print('WiFi connected')
 print(station.ifconfig())
+
+ntptime.host = 'pool.ntp.org'  # Use this or another known NTP server
+
+server_url = 'https://script.google.com/macros/s/AKfycbx6XoGJxNQpsF6qICdRmmlp_zFsJZ92pV8MnD4cIdujUlCO4lFyapZ9sK6DRJx7G-an/exec'
 
 BLYNK_TEMPLATE_ID = "TMPL6Z78zEeyN"
 BLYNK_TEMPLATE_NAME = "PBL3"
@@ -32,6 +37,16 @@ if blynk is None:
     print('Failed to initialize Blynk')
 else:
     print('Blynk initialized successfully')
+
+def get_ntp_time():
+    try:
+        ntptime.settime()  # Synchronize the system time with NTP
+        tm = time.localtime(time.time())  # Get local time
+        formatted_time = "{:02d}:{:02d}:{:02d}".format(tm[3], tm[4], tm[5])
+        return formatted_time
+    except Exception as e:
+        print("Error getting NTP time:", e)
+        return None
 
 # Turbidity sensor
 adc = ADC(Pin(34))
@@ -60,7 +75,6 @@ dat = Pin(4)
 ds_sensor = ds18x20.DS18X20(onewire.OneWire(dat))
 roms = ds_sensor.scan()
 print('Found DS devices: ', roms)
-
 if not roms:
     print("No DS18B20 devices found!")
 def read_temperature():
@@ -70,23 +84,44 @@ def read_temperature():
         temp = ds_sensor.read_temp(rom)
         print('Temperature: {:.2f} C'.format(temp))
         return temp
-    
 
 while True:               
-        NTU = read_turbidity()
-        phValue = read_ph() 
-        temp = read_temperature()
+    NTU = read_turbidity()
+    phValue = read_ph() 
+    temp = read_temperature()
         
-        read_temperature()
-        display.fill(0)
-        display.text("Tur: {:.2f}".format(NTU), 5, 0) 
-        display.text("PH: {:.2f}".format(phValue), 5, 45) 
-        display.text("Temp: {:.2f} C".format(temp), 5, 30)
-        display.show()
-        if blynk is not None:
-            blynk.virtual_write(1,NTU)
-            blynk.virtual_write(2,phValue)
-            blynk.virtual_write(0,temp)
+    display.fill(0)
+    display.text("Tur: {:.2f}".format(NTU), 5, 0) 
+    display.text("PH: {:.2f}".format(phValue), 5, 45) 
+    display.text("Temp: {:.2f} C".format(temp), 5, 30)
+    display.show()
+        
+    if blynk is not None:
+        blynk.virtual_write(1,NTU)
+        blynk.virtual_write(2,phValue)
+        blynk.virtual_write(0,temp)
         blynk.run()
+        
+        # Get current time
+    timestamp = get_ntp_time()
+
+    # Prepare JSON payload
+    json_data = {
+        "method": "append",
+        "Temp": temp,
+        "NTU": NTU,
+        "PH": phValue,
+        "timestamp": timestamp,
+        # "buttonState": str(button_state).lower()  # Convert bool to "true" or "false"
+    }
+
+    # Send HTTP POST request
+    try:
+        response = urequests.post(server_url, json=json_data)
+        print("Response:", response.status_code, response.text)
+        response.close()
+    except Exception as e:
+        print("Error sending data:", e)
+            
         time.sleep(2)
 
