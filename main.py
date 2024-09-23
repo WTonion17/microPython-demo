@@ -27,7 +27,7 @@ print(station.ifconfig())
 
 ntptime.host = 'pool.ntp.org'  # Use this or another known NTP server
 
-server_url = 'https://script.google.com/macros/s/AKfycbx6XoGJxNQpsF6qICdRmmlp_zFsJZ92pV8MnD4cIdujUlCO4lFyapZ9sK6DRJx7G-an/exec'
+server_url = 'https://script.google.com/macros/s/AKfycbwEBDMV7npCrkxAaN1BUHYQaHLqwUZRsOI8U5uhgOT5i89fABizurx9U6Zq6vz7RizY/exec'
 
 BLYNK_TEMPLATE_ID = "TMPL6Z78zEeyN"
 BLYNK_TEMPLATE_NAME = "PBL3"
@@ -74,7 +74,7 @@ def read_ph():
 dat = Pin(4)
 ds_sensor = ds18x20.DS18X20(onewire.OneWire(dat))
 roms = ds_sensor.scan()
-print('Found DS devices: ', roms)
+print('Found DS18B20 devices: ', roms)
 if not roms:
     print("No DS18B20 devices found!")
 def read_temperature():
@@ -108,9 +108,9 @@ while True:
     # Prepare JSON payload
     json_data = {
         "method": "append",
-        "Temp": temp,
+        "temp": temp,
         "NTU": NTU,
-        "PH": phValue,
+        "phValue": phValue,
         "timestamp": timestamp,
         # "buttonState": str(button_state).lower()  # Convert bool to "true" or "false"
     }
@@ -123,5 +123,5 @@ while True:
     except Exception as e:
         print("Error sending data:", e)
             
-        time.sleep(2)
+        time.sleep(5)
 
